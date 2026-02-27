@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../api';
+import {
+  getActivityData,
+  getBooksData,
+  getBorrowedData,
+  getReturnedData
+} from './studentStorage';
 
 const StudentHome = () => {
   const [user, setUser] = useState({});
@@ -28,11 +34,26 @@ const StudentHome = () => {
     if (userData.email) {
       fetchStudentData(userData.email);
     } else {
+      const localBooks = getBooksData();
+      const localBorrowed = getBorrowedData();
+      const localReturned = getReturnedData();
+      setSummaryData({
+        totalBooks: localBooks.length,
+        borrowed: localBorrowed.length,
+        returned: localReturned.length,
+        overdue: localBorrowed.filter((item) => item.status === 'overdue').length
+      });
+      setRecentActivity(getActivityData());
       setLoading(false);
     }
   }, []);
 
   const fetchStudentData = async (email) => {
+    const localBooks = getBooksData();
+    const localBorrowed = getBorrowedData();
+    const localReturned = getReturnedData();
+    const localActivity = getActivityData();
+
     try {
       setLoading(true);
       setError(null);
@@ -42,20 +63,39 @@ const StudentHome = () => {
         api.getRecentActivity(email)
       ]);
 
-      if (summaryResult.success) {
-        setSummaryData(summaryResult.data);
-      } else {
-        console.error('Summary error:', summaryResult.message);
-      }
+      const apiSummary = summaryResult.success ? summaryResult.data : null;
+      const nextSummary = {
+        totalBooks: apiSummary?.totalBooks ?? localBooks.length,
+        borrowed: localBorrowed.length,
+        returned: localReturned.length,
+        overdue: localBorrowed.filter((item) => item.status === 'overdue').length
+      };
+      setSummaryData(nextSummary);
 
-      if (activityResult.success) {
+      if (localActivity.length > 0) {
+        setRecentActivity(localActivity);
+      } else if (activityResult.success) {
         setRecentActivity(activityResult.data);
       } else {
+        setRecentActivity([]);
+      }
+
+      if (!summaryResult.success) {
+        console.error('Summary error:', summaryResult.message);
+      }
+      if (!activityResult.success && localActivity.length === 0) {
         console.error('Activity error:', activityResult.message);
       }
     } catch (err) {
       console.error('Fetch error:', err);
-      setError('Failed to load data. Please try again.');
+      setSummaryData({
+        totalBooks: localBooks.length,
+        borrowed: localBorrowed.length,
+        returned: localReturned.length,
+        overdue: localBorrowed.filter((item) => item.status === 'overdue').length
+      });
+      setRecentActivity(localActivity);
+      setError('Failed to load server data. Showing local data.');
     } finally {
       setLoading(false);
     }

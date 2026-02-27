@@ -78,6 +78,10 @@
   flex-shrink: 0;
 }
 
+.user-info {
+  display: none;
+}
+
 /* Search */
 .search-container {
   position: relative;
@@ -140,6 +144,10 @@
   transition: transform 0.3s ease;
   z-index: 900;
   overflow-y: auto;
+}
+
+.sidebar-overlay {
+  display: none;
 }
 
 .sidebar.closed {
@@ -732,6 +740,20 @@
 
   .sidebar.open {
     transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 850;
+    cursor: pointer;
   }
 
   .main-content,

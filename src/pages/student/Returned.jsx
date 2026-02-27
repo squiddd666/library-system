@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { getReturnedData } from './studentStorage';
 
 const Returned = () => {
   const [returnedBooks, setReturnedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Mock returned books data - in real app, fetch from API
-    const mockReturned = [
-      { id: 1, title: "Introduction to Algorithms", returnDate: "2024-01-14", borrowDate: "2024-01-01", status: "completed" },
-      { id: 2, title: "The Pragmatic Programmer", returnDate: "2024-01-10", borrowDate: "2023-12-20", status: "completed" },
-      { id: 3, title: "Computer Networking", returnDate: "2024-01-05", borrowDate: "2023-12-15", status: "completed" },
-      { id: 4, title: "Operating System Concepts", returnDate: "2023-12-28", borrowDate: "2023-12-10", status: "completed" }
-    ];
-    
-    setReturnedBooks(mockReturned);
+    setReturnedBooks(getReturnedData());
     setLoading(false);
   }, []);
+
+  const filteredReturned = returnedBooks.filter((book) =>
+    book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    book.borrowDate.includes(searchQuery) ||
+    book.returnDate.includes(searchQuery)
+  );
 
   return (
     <div className="returned-page">
@@ -23,10 +23,20 @@ const Returned = () => {
         <h2>✅ Returned Books</h2>
         <p>History of your returned books</p>
       </div>
+      <div className="search-container" style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search returned books..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+        <span className="search-icon">🔍</span>
+      </div>
 
       {loading ? (
         <div className="no-results">Loading...</div>
-      ) : returnedBooks.length > 0 ? (
+      ) : filteredReturned.length > 0 ? (
         <div className="table-container">
           <table className="activity-table">
             <thead>
@@ -38,7 +48,7 @@ const Returned = () => {
               </tr>
             </thead>
             <tbody>
-              {returnedBooks.map((book) => (
+              {filteredReturned.map((book) => (
                 <tr key={book.id}>
                   <td>{book.title}</td>
                   <td>{book.borrowDate}</td>
@@ -54,7 +64,7 @@ const Returned = () => {
           </table>
         </div>
       ) : (
-        <div className="no-results">No returned books yet</div>
+        <div className="no-results">No returned books found</div>
       )}
 
       <style>{`

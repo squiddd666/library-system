@@ -23,20 +23,25 @@ function App() {
     return user.role || 'student';
   };
 
+  const getDefaultDashboardPath = () => {
+    return getUserRole() === 'admin' ? '/admin-dashboard' : '/student-dashboard';
+  };
+
   return (
     <Router>
       <Routes>
         <Route 
           path="/login" 
-          element={isAuthenticated() ? <Navigate to="/student-dashboard" /> : <Login />} 
+          element={isAuthenticated() ? <Navigate to={getDefaultDashboardPath()} /> : <Login />} 
         />
         <Route 
-          path="/dashboard" 
-          element={isAuthenticated() ? <Dashboard /> : <Navigate to="/login" />} 
+          path="/admin-dashboard"
+          element={isAuthenticated() ? (getUserRole() === 'admin' ? <Dashboard /> : <Navigate to="/student-dashboard" />) : <Navigate to="/login" />}
         />
+        <Route path="/dashboard" element={<Navigate to="/admin-dashboard" />} />
         <Route 
           path="/student-dashboard" 
-          element={isAuthenticated() ? <StudentDashboard /> : <Navigate to="/login" />}
+          element={isAuthenticated() ? (getUserRole() !== 'admin' ? <StudentDashboard /> : <Navigate to="/admin-dashboard" />) : <Navigate to="/login" />}
         >
           <Route index element={<StudentHome />} />
           <Route path="books" element={<Books />} />
@@ -47,7 +52,7 @@ function App() {
         </Route>
         <Route 
           path="/" 
-          element={<Navigate to="/login" />} 
+          element={<Navigate to={isAuthenticated() ? getDefaultDashboardPath() : '/login'} />} 
         />
       </Routes>
     </Router>

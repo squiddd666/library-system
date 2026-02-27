@@ -1,5 +1,15 @@
 const API_URL = 'http://localhost/LibraryScript-main/server';
 
+const parseResponse = async (response) => {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    const fallbackMessage = text ? text.slice(0, 300) : 'Invalid server response';
+    return { success: false, message: fallbackMessage };
+  }
+};
+
 export const api = {
   // Login user
   login: async (email, password) => {
@@ -56,7 +66,7 @@ export const api = {
         },
         body: JSON.stringify(bookData),
       });
-      const data = await response.json();
+      const data = await parseResponse(response);
       return data;
     } catch (error) {
       return { success: false, message: 'Connection error' };

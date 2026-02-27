@@ -1,26 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { borrowBookById, getBooksData, getBorrowedData } from './studentStorage';
 
 const Books = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [message, setMessage] = useState('');
+  const [borrowedBookIds, setBorrowedBookIds] = useState([]);
 
   useEffect(() => {
-    // Mock books data - in real app, fetch from API
-    const mockBooks = [
-      { id: 1, title: "JavaScript: The Good Parts", author: "Douglas Crockford", category: "Programming", available: 5 },
-      { id: 2, title: "Clean Code", author: "Robert C. Martin", category: "Programming", available: 3 },
-      { id: 3, title: "Design Patterns", author: "Gang of Four", category: "Programming", available: 2 },
-      { id: 4, title: "Introduction to Algorithms", author: "Thomas Cormen", category: "Computer Science", available: 4 },
-      { id: 5, title: "The Pragmatic Programmer", author: "David Thomas", category: "Programming", available: 6 },
-      { id: 6, title: "Computer Networking", author: "James Kurose", category: "Computer Science", available: 3 },
-      { id: 7, title: "Database System Concepts", author: "Silberschatz", category: "Database", available: 4 },
-      { id: 8, title: "Operating System Concepts", author: "Abraham Silberschatz", category: "Computer Science", available: 2 },
-      { id: 9, title: "Artificial Intelligence", author: "Stuart Russell", category: "AI", available: 5 },
-      { id: 10, title: "Machine Learning", author: "Tom Mitchell", category: "AI", available: 3 }
-    ];
-    
-    setBooks(mockBooks);
+    setBooks(getBooksData());
+    setBorrowedBookIds(getBorrowedData().map((item) => item.bookId));
     setLoading(false);
   }, []);
 
@@ -29,6 +19,13 @@ const Books = () => {
     book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
     book.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleBorrow = (bookId) => {
+    const result = borrowBookById(bookId);
+    setMessage(result.message);
+    setBooks(getBooksData());
+    setBorrowedBookIds(getBorrowedData().map((item) => item.bookId));
+  };
 
   return (
     <div className="books-page">
@@ -47,6 +44,11 @@ const Books = () => {
         />
         <span className="search-icon">🔍</span>
       </div>
+      {message && (
+        <div className="no-results" style={{ padding: '12px', marginBottom: '18px' }}>
+          {message}
+        </div>
+      )}
 
       {loading ? (
         <div className="no-results">Loading books...</div>
@@ -65,6 +67,14 @@ const Books = () => {
                       {book.available > 0 ? `${book.available} available` : 'Not available'}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    className="action-btn borrow-btn"
+                    disabled={book.available <= 0 || borrowedBookIds.includes(book.id)}
+                    onClick={() => handleBorrow(book.id)}
+                  >
+                    {borrowedBookIds.includes(book.id) ? 'Borrowed' : 'Borrow'}
+                  </button>
                 </div>
               </div>
             ))
@@ -153,6 +163,15 @@ const Books = () => {
         .availability-badge.unavailable {
           background: rgba(234, 67, 53, 0.2);
           color: #ea4335;
+        }
+        .borrow-btn {
+          margin-top: 10px;
+          width: 100%;
+        }
+        .borrow-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none;
         }
       `}</style>
     </div>

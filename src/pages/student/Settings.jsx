@@ -1,4 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  clearStudentHistory,
+  getNotificationSettings,
+  setNotificationSettings
+} from './studentStorage';
 
 const Settings = () => {
   const [notifications, setNotifications] = useState({
@@ -6,12 +11,31 @@ const Settings = () => {
     push: false,
     weekly: true
   });
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setNotifications(getNotificationSettings());
+  }, []);
 
   const handleNotificationChange = (key) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    const updated = {
+      ...notifications,
+      [key]: !notifications[key]
+    };
+    setNotifications(updated);
+    setNotificationSettings(updated);
+    setMessage('Notification settings saved.');
+  };
+
+  const handleClearHistory = () => {
+    const confirmed = window.confirm('Clear returned and recent activity history?');
+    if (!confirmed) return;
+    clearStudentHistory();
+    setMessage('History cleared successfully.');
+  };
+
+  const handleChangePassword = () => {
+    setMessage('Change password flow is not connected yet.');
   };
 
   return (
@@ -20,6 +44,11 @@ const Settings = () => {
         <h2>⚙️ Settings</h2>
         <p>Manage your account preferences</p>
       </div>
+      {message && (
+        <div className="no-results" style={{ padding: '12px', marginBottom: '20px' }}>
+          {message}
+        </div>
+      )}
 
       <div className="settings-section">
         <h3>Notification Preferences</h3>
@@ -30,8 +59,8 @@ const Settings = () => {
               <p className="setting-description">Receive email updates about your borrowed books</p>
             </div>
             <label className="toggle">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={notifications.email}
                 onChange={() => handleNotificationChange('email')}
               />
@@ -44,8 +73,8 @@ const Settings = () => {
               <p className="setting-description">Receive push notifications on your device</p>
             </div>
             <label className="toggle">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={notifications.push}
                 onChange={() => handleNotificationChange('push')}
               />
@@ -58,8 +87,8 @@ const Settings = () => {
               <p className="setting-description">Receive a weekly summary of your library activity</p>
             </div>
             <label className="toggle">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={notifications.weekly}
                 onChange={() => handleNotificationChange('weekly')}
               />
@@ -77,14 +106,14 @@ const Settings = () => {
               <p className="setting-label">Change Password</p>
               <p className="setting-description">Update your account password</p>
             </div>
-            <button className="action-btn">Change</button>
+            <button type="button" className="action-btn" onClick={handleChangePassword}>Change</button>
           </div>
           <div className="setting-item">
             <div className="setting-info">
               <p className="setting-label">Clear History</p>
               <p className="setting-description">Clear your browsing and activity history</p>
             </div>
-            <button className="action-btn danger">Clear</button>
+            <button type="button" className="action-btn danger" onClick={handleClearHistory}>Clear</button>
           </div>
         </div>
       </div>

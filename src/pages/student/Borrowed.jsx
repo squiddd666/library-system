@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { getBorrowedData, returnBorrowedBook } from './studentStorage';
 
 const Borrowed = () => {
   const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [message, setMessage] = useState('');
+
+  const loadBorrowed = () => {
+    setBorrowedBooks(getBorrowedData());
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Mock borrowed books data - in real app, fetch from API
-    const mockBorrowed = [
-      { id: 1, title: "JavaScript: The Good Parts", borrowDate: "2024-01-15", dueDate: "2024-01-29", status: "active" },
-      { id: 2, title: "Clean Code", borrowDate: "2024-01-10", dueDate: "2024-01-24", status: "overdue" },
-      { id: 3, title: "Design Patterns", borrowDate: "2024-01-18", dueDate: "2024-02-01", status: "active" }
-    ];
-    
-    setBorrowedBooks(mockBorrowed);
-    setLoading(false);
+    loadBorrowed();
   }, []);
+
+  const handleReturn = (id) => {
+    const result = returnBorrowedBook(id);
+    setMessage(result.message);
+    loadBorrowed();
+  };
+
+  const filteredBorrowed = borrowedBooks.filter((book) =>
+    book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    book.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    book.borrowDate.includes(searchQuery) ||
+    book.dueDate.includes(searchQuery)
+  );
 
   return (
     <div className="borrowed-page">
@@ -22,10 +35,25 @@ const Borrowed = () => {
         <h2>📖 Borrowed Books</h2>
         <p>Books you currently have borrowed</p>
       </div>
+      <div className="search-container" style={{ marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="Search borrowed books..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+        <span className="search-icon">🔍</span>
+      </div>
+      {message && (
+        <div className="no-results" style={{ padding: '12px', marginBottom: '16px' }}>
+          {message}
+        </div>
+      )}
 
       {loading ? (
         <div className="no-results">Loading...</div>
-      ) : borrowedBooks.length > 0 ? (
+      ) : filteredBorrowed.length > 0 ? (
         <div className="table-container">
           <table className="activity-table">
             <thead>
@@ -38,7 +66,7 @@ const Borrowed = () => {
               </tr>
             </thead>
             <tbody>
-              {borrowedBooks.map((book) => (
+              {filteredBorrowed.map((book) => (
                 <tr key={book.id}>
                   <td>{book.title}</td>
                   <td>{book.borrowDate}</td>
@@ -49,7 +77,13 @@ const Borrowed = () => {
                     </span>
                   </td>
                   <td>
-                    <button className="action-btn">Return</button>
+                    <button
+                      type="button"
+                      className="action-btn"
+                      onClick={() => handleReturn(book.id)}
+                    >
+                      Return
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -57,7 +91,7 @@ const Borrowed = () => {
           </table>
         </div>
       ) : (
-        <div className="no-results">You have no borrowed books</div>
+        <div className="no-results">No borrowed books found</div>
       )}
 
       <style>{`

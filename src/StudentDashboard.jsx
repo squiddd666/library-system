@@ -6,6 +6,46 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen((prev) => !prev);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      setSidebarOpen(!mobile);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closeSidebar();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) {
+      closeSidebar();
+    }
+  }, [location.pathname, isMobile]);
 
   // Get page title based on current route
   const getPageTitle = () => {
@@ -42,7 +82,7 @@ const StudentDashboard = () => {
         <div className="header-left">
           <button 
             className="hamburger-btn"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={handleSidebarToggle}
           >
             ☰
           </button>
@@ -65,6 +105,7 @@ const StudentDashboard = () => {
                 to={item.path}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 end={item.path === '/student-dashboard'}
+                onClick={() => isMobile && closeSidebar()}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
@@ -81,6 +122,14 @@ const StudentDashboard = () => {
             </div>
           </nav>
         </aside>
+        {isMobile && sidebarOpen && (
+          <button
+            type="button"
+            className="sidebar-overlay"
+            aria-label="Close sidebar"
+            onClick={closeSidebar}
+          />
+        )}
 
         {/* Main Content */}
         <main className="main-content">
