@@ -73,6 +73,16 @@
   transition: all 0.3s ease;
 }
 
+/* Keep icon + input rows full width when inline style sets column layout */
+.input[style*="flex-direction: column"] {
+  align-items: stretch;
+  gap: 6px;
+}
+
+.input[style*="flex-direction: column"] > div {
+  width: 100%;
+}
+
 .input:focus-within {
   border-color: #4c8f16;
   box-shadow: 0 0 20px rgba(76, 143, 22, 0.3);
