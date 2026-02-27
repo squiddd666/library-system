@@ -38,11 +38,19 @@ export const api = {
         },
         body: JSON.stringify(userData),
       });
-      const data = await response.json();
+      const data = await parseResponse(response);
       return data;
     } catch (error) {
       return { success: false, message: 'Connection error. Make sure XAMPP is running.' };
     }
+  },
+
+  requestSignupOtp: async (userData) => {
+    return api.register({ ...userData, action: 'send_otp' });
+  },
+
+  verifySignupOtp: async (userData, otp) => {
+    return api.register({ ...userData, otp, action: 'verify_otp' });
   },
 
   // Get all books

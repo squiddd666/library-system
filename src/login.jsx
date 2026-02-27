@@ -27,6 +27,13 @@ const Login = () => {
   const [lastName, setLastName] = useState("");
   const [birthday, setBirthday] = useState("");
   const [gender, setGender] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+
+  const resetSignupState = () => {
+    setOtp("");
+    setOtpSent(false);
+  };
 
   // ================= EMAIL VALIDATION =================
   const handleEmailChange = (e) => {
@@ -153,15 +160,30 @@ const Login = () => {
       birthday: birthday || null,
       gender: gender || null
     };
-
-    const result = await api.register(userData);
+    let result;
+    if (!otpSent) {
+      result = await api.requestSignupOtp(userData);
+    } else {
+      if (!/^\d{6}$/.test(otp)) {
+        setLoading(false);
+        setMessage("Enter a valid 6-digit OTP");
+        return;
+      }
+      result = await api.verifySignupOtp(userData, otp);
+    }
     
     setLoading(false);
     
+    if (result.success && result.otp_required) {
+      setOtpSent(true);
+      setMessage(result.message || "OTP sent to your email.");
+      return;
+    }
+
     if (result.success) {
       setMessage("Registration successful! Please login.");
       setAction("Login");
-      // Clear form
+      resetSignupState();
       setFirstName("");
       setLastName("");
       setEmail("");
@@ -430,6 +452,24 @@ const Login = () => {
                 </span>
               )}
             </div>
+
+            {otpSent && (
+              <div className="input" style={{ flexDirection: "column", position: "relative" }}>
+                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <input
+                    type="text"
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                    style={{ width: "100%", boxSizing: "border-box", letterSpacing: "3px" }}
+                  />
+                </div>
+                <span style={{ color: "#ddd", fontSize: "12px" }}>
+                  Check your email for the OTP (valid for 5 minutes).
+                </span>
+              </div>
+            )}
           </>
         )}
 
@@ -448,12 +488,13 @@ const Login = () => {
             if (action === "Login") {
               setAction("Sign up");
               setMessage("");
+              resetSignupState();
             } else {
               handleSignup();
             }
           }}
         >
-          Sign up
+          {action === "Login" ? "Sign up" : otpSent ? "Verify OTP & Sign up" : "Send OTP"}
         </div>
 
         <div
@@ -463,6 +504,7 @@ const Login = () => {
             if (action === "Sign up") {
               setAction("Login");
               setMessage("");
+              resetSignupState();
             } else {
               handleLogin();
             }
@@ -471,6 +513,35 @@ const Login = () => {
           Login
         </div>
       </div>
+
+      {action === "Sign up" && otpSent && (
+        <div className="submit-container" style={{ marginTop: "10px" }}>
+          <div
+            className="submit gray"
+            onClick={async () => {
+              if (!firstName || !lastName || !email || !password || !confirmPassword) {
+                setMessage("Please complete signup details before resending OTP");
+                return;
+              }
+              setLoading(true);
+              setMessage("");
+              const userData = {
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                password: password,
+                birthday: birthday || null,
+                gender: gender || null
+              };
+              const result = await api.requestSignupOtp(userData);
+              setLoading(false);
+              setMessage(result.message || (result.success ? "OTP resent." : "Failed to resend OTP"));
+            }}
+          >
+            Resend OTP
+          </div>
+        </div>
+      )}
     </div>
   );
 };

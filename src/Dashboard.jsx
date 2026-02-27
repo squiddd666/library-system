@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from './api';
 import './Dashboard.css';
@@ -27,24 +27,65 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activityLog, setActivityLog] = useState([]);
+  const [studentActivityLog, setStudentActivityLog] = useState([]);
 
   const logAction = (action, details) => {
+    const now = Date.now();
     setActivityLog((prev) => [
       {
-        id: Date.now(),
+        id: now,
         action,
         details,
-        time: new Date().toLocaleString()
+        time: new Date().toLocaleString(),
+        timestamp: now
       },
       ...prev
     ]);
   };
 
+  const loadStudentActivity = useCallback(() => {
+    const prefix = 'library.student.';
+    const suffix = '.activity';
+    const collected = [];
+
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key || !key.startsWith(prefix) || !key.endsWith(suffix)) continue;
+
+      const studentEmail = key.slice(prefix.length, -suffix.length) || 'student';
+
+      try {
+        const raw = localStorage.getItem(key);
+        const entries = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(entries)) continue;
+
+        entries.forEach((entry, entryIndex) => {
+          const timestamp = Number(entry?.timestamp) || Date.parse(entry?.date || '') || 0;
+          collected.push({
+            id: `student-${studentEmail}-${entry?.id || timestamp || entryIndex}`,
+            source: 'Student',
+            user: studentEmail,
+            action: entry?.action || 'Activity',
+            details: entry?.book_title || entry?.details || '-',
+            time: entry?.time || entry?.date || '-',
+            timestamp
+          });
+        });
+      } catch (error) {
+        // Ignore malformed student activity payloads.
+      }
+    }
+
+    collected.sort((a, b) => b.timestamp - a.timestamp);
+    setStudentActivityLog(collected);
+  }, []);
+
   const menuItems = [
     { id: 'home', icon: '📊', label: 'Dashboard' },
     { id: 'books', icon: '📚', label: 'Manage Books' },
     { id: 'analytics', icon: '📈', label: 'Analytics' },
-    { id: 'activity', icon: '🕒', label: 'Activity' },
+    { id: 'activity', icon: '🕒', label: 'Admin Activity' },
+    { id: 'student-logs', icon: '🧾', label: 'Student Logs' },
     { id: 'settings', icon: '⚙️', label: 'Settings' }
   ];
 
@@ -52,6 +93,7 @@ const Dashboard = () => {
     if (activeSection === 'books') return 'BOOK MANAGEMENT';
     if (activeSection === 'analytics') return 'LIBRARY ANALYTICS';
     if (activeSection === 'activity') return 'ADMIN ACTIVITY LOG';
+    if (activeSection === 'student-logs') return 'STUDENT ACTIVITY LOGS';
     if (activeSection === 'settings') return 'ADMIN SETTINGS';
     return 'ADMIN DASHBOARD HOME';
   };
@@ -70,7 +112,18 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadBooks();
-  }, []);
+    loadStudentActivity();
+  }, [loadStudentActivity]);
+
+  useEffect(() => {
+    const syncStudentActivity = () => loadStudentActivity();
+    window.addEventListener('storage', syncStudentActivity);
+    window.addEventListener('focus', syncStudentActivity);
+    return () => {
+      window.removeEventListener('storage', syncStudentActivity);
+      window.removeEventListener('focus', syncStudentActivity);
+    };
+  }, [loadStudentActivity]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -442,7 +495,37 @@ const Dashboard = () => {
                 <td>{entry.time}</td>
               </tr>
             )) : (
-              <tr><td colSpan="3" className="no-results">No actions yet</td></tr>
+              <tr><td colSpan="3" className="no-results">No admin actions yet</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderStudentLogs = () => (
+    <div className="content-section">
+      <h3 className="section-title">Recent Student Activity</h3>
+      <div className="table-container">
+        <table className="activity-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Action</th>
+              <th>Details</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studentActivityLog.length > 0 ? studentActivityLog.map((entry) => (
+              <tr key={entry.id}>
+                <td>{entry.user}</td>
+                <td>{entry.action}</td>
+                <td>{entry.details}</td>
+                <td>{entry.time}</td>
+              </tr>
+            )) : (
+              <tr><td colSpan="4" className="no-results">No student activity yet</td></tr>
             )}
           </tbody>
         </table>
@@ -510,6 +593,7 @@ const Dashboard = () => {
             {activeSection === 'books' && renderBooks()}
             {activeSection === 'analytics' && renderAnalytics()}
             {activeSection === 'activity' && renderActivity()}
+            {activeSection === 'student-logs' && renderStudentLogs()}
             {activeSection === 'settings' && renderSettings()}
           </div>
         </main>
