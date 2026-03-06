@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 const API_HOST = `${window.location.protocol}//${window.location.hostname}`;
 const API_URL = `${API_HOST}/library-system-main/server`;
-=======
-const API_URL = 'http://localhost/LibraryScript-main/server';
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
 
 const parseResponse = async (response) => {
   const text = await response.text();
@@ -58,7 +54,6 @@ export const api = {
     return api.register({ ...userData, otp, action: 'verify_otp' });
   },
 
-<<<<<<< HEAD
   getSignupSettings: async () => {
     try {
       const response = await fetch(`${API_URL}/signup-settings.php`);
@@ -82,9 +77,6 @@ export const api = {
       return { success: false, message: 'Connection error' };
     }
   },
-
-=======
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
   // Get all books
   getBooks: async () => {
     try {

@@ -28,14 +28,11 @@ const Dashboard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activityLog, setActivityLog] = useState([]);
   const [studentActivityLog, setStudentActivityLog] = useState([]);
-<<<<<<< HEAD
   const [signupSettings, setSignupSettings] = useState({
     email_verification_enabled: true
   });
   const [signupSettingsLoading, setSignupSettingsLoading] = useState(true);
   const [signupSettingsSaving, setSignupSettingsSaving] = useState(false);
-=======
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
 
   const logAction = (action, details) => {
     const now = Date.now();
@@ -118,7 +115,6 @@ const Dashboard = () => {
     setLoading(false);
   };
 
-<<<<<<< HEAD
   const loadSignupSettings = useCallback(async () => {
     setSignupSettingsLoading(true);
     const result = await api.getSignupSettings();
@@ -137,12 +133,6 @@ const Dashboard = () => {
     loadStudentActivity();
     loadSignupSettings();
   }, [loadSignupSettings, loadStudentActivity]);
-=======
-  useEffect(() => {
-    loadBooks();
-    loadStudentActivity();
-  }, [loadStudentActivity]);
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
 
   useEffect(() => {
     const syncStudentActivity = () => loadStudentActivity();
@@ -326,7 +316,6 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-<<<<<<< HEAD
   const handleSignupVerificationToggle = async () => {
     const nextEnabled = !signupSettings.email_verification_enabled;
     setSignupSettingsSaving(true);
@@ -348,9 +337,6 @@ const Dashboard = () => {
       );
     }
   };
-
-=======
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
   const renderHome = () => (
     <>
       <div className="admin-welcome-card">
@@ -605,7 +591,6 @@ const Dashboard = () => {
           </div>
           <button type="button" className="action-btn" onClick={loadBooks}>Refresh</button>
         </div>
-<<<<<<< HEAD
         <div className="setting-item">
           <div className="setting-info">
             <p className="setting-label">Email Verification on Signup</p>
@@ -632,8 +617,6 @@ const Dashboard = () => {
                   : 'Enable'}
           </button>
         </div>
-=======
->>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
       </div>
     </div>
   );
