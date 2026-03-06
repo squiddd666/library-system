@@ -1,0 +1,269 @@
+/* Glassmorphism Container - Darker for better contrast */
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 40px 30px;
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.6s ease-out;
+  margin: auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.text {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.underline {
+  width: 60px;
+  height: 4px;
+  background: #4c8f16;
+  border-radius: 2px;
+}
+
+.inputs {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+/* Input styling - Darker with clear borders */
+.input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  min-height: 60px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 14px 18px;
+  transition: all 0.3s ease;
+}
+
+/* Keep icon + input rows full width when inline style sets column layout */
+.input[style*="flex-direction: column"] {
+  align-items: stretch;
+  gap: 6px;
+}
+
+.input[style*="flex-direction: column"] > div {
+  width: 100%;
+}
+
+.input:focus-within {
+  border-color: #4c8f16;
+  box-shadow: 0 0 20px rgba(76, 143, 22, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.input img {
+  margin: 0;
+  width: 22px;
+  height: 22px;
+  opacity: 0.9;
+}
+
+.input:focus-within img {
+  opacity: 1;
+}
+
+.input input {
+  flex: 1;
+  height: 24px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+}
+
+.input input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.input input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4) inset;
+  -webkit-text-fill-color: #fff;
+}
+
+/* Label styling */
+.input label {
+  height: auto;
+  width: auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+/* Date input styling */
+.input input[type="date"] {
+  color: #ffffff;
+  flex: 1;
+}
+
+.input input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+/* Radio input styling */
+.input input[type="radio"] {
+  margin-right: 6px;
+  accent-color: #4c8f16;
+  width: auto;
+  height: auto;
+}
+
+/* Error message styling */
+.input span[style*="color: red"] {
+  display: block;
+  color: #ff6b6b !important;
+  font-size: 12px !important;
+  font-weight: 500;
+  margin-top: 4px;
+  margin-left: 4px;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.forgetpass {
+  text-align: center;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.forgetpass span {
+  color: #7cff0e;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.forgetpass span:hover {
+  color: #a8ff5e;
+  text-shadow: 0 0 10px rgba(124, 255, 14, 0.5);
+}
+
+.submit-container {
+  display: flex;
+  gap: 15px;
+  margin: 40px auto;
+  justify-content: center;
+}
+
+/* Buttons - Solid primary color for better contrast */
+.submit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 180px;
+  height: 52px;
+  color: #ffffff;
+  background: #4c8f16;
+  border-radius: 26px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit:hover {
+  background: #5da31c;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(76, 143, 22, 0.4);
+}
+
+.submit:active {
+  transform: translateY(0);
+  background: #3d7410;
+}
+
+/* Gray button variant */
+.submit.gray {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.submit.gray:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 520px) {
+  .container {
+    padding: 30px 20px;
+  }
+  
+  .text {
+    font-size: 28px;
+  }
+  
+  .input {
+    max-width: 100%;
+    padding: 12px 14px;
+  }
+  
+  .submit-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .submit {
+    width: 100%;
+    max-width: none;
+  }
+}
