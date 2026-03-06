@@ -14,12 +14,18 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+<<<<<<< HEAD
     "prestart": "node scripts/clear-eslint-cache.js",
     "start": "set \"DISABLE_ESLINT_PLUGIN=true\" && react-scripts start",
     "prebuild": "node scripts/clear-eslint-cache.js",
     "build": "set \"DISABLE_ESLINT_PLUGIN=true\" && react-scripts build",
     "pretest": "node scripts/clear-eslint-cache.js",
     "test": "set \"DISABLE_ESLINT_PLUGIN=true\" && react-scripts test",
+=======
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

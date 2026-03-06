@@ -1,7 +1,10 @@
 const STORAGE_PREFIX = 'library.student';
 
 const DEFAULT_BOOKS = [
+<<<<<<< HEAD
   // eslint-disable-next-line no-script-url
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
   { id: 1, title: 'JavaScript: The Good Parts', author: 'Douglas Crockford', category: 'Programming', available: 5 },
   { id: 2, title: 'Clean Code', author: 'Robert C. Martin', category: 'Programming', available: 3 },
   { id: 3, title: 'Design Patterns', author: 'Gang of Four', category: 'Programming', available: 2 },

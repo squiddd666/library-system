@@ -1,10 +1,19 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
+=======
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
 import emailIcon from "./Components/email.png";
 import passIcon from "./Components/password.png";
 import './login.css';
 import { api } from './api';
 
 const Login = () => {
+<<<<<<< HEAD
+=======
+  const navigate = useNavigate();
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
   const [action, setAction] = useState("Login");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -27,6 +36,7 @@ const Login = () => {
   const [gender, setGender] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+<<<<<<< HEAD
   const [signupVerificationEnabled, setSignupVerificationEnabled] = useState(true);
 
   useEffect(() => {
@@ -45,6 +55,8 @@ const Login = () => {
       mounted = false;
     };
   }, []);
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
 
   const resetSignupState = () => {
     setOtp("");
@@ -177,7 +189,11 @@ const Login = () => {
       gender: gender || null
     };
     let result;
+<<<<<<< HEAD
     if (!signupVerificationEnabled || !otpSent) {
+=======
+    if (!otpSent) {
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
       result = await api.requestSignupOtp(userData);
     } else {
       if (!/^\d{6}$/.test(otp)) {
@@ -207,7 +223,10 @@ const Login = () => {
       setConfirmPassword("");
       setBirthday("");
       setGender("");
+<<<<<<< HEAD
       setOtp("");
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
     } else {
       setMessage(result.message);
     }
@@ -470,7 +489,11 @@ const Login = () => {
               )}
             </div>
 
+<<<<<<< HEAD
             {signupVerificationEnabled && otpSent && (
+=======
+            {otpSent && (
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
               <div className="input" style={{ flexDirection: "column", position: "relative" }}>
                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                   <input
@@ -502,9 +525,12 @@ const Login = () => {
         <div
           className={action === "Login" ? "submit gray" : "submit"}
           onClick={() => {
+<<<<<<< HEAD
             if (loading) {
               return;
             }
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
             if (action === "Login") {
               setAction("Sign up");
               setMessage("");
@@ -514,6 +540,7 @@ const Login = () => {
             }
           }}
         >
+<<<<<<< HEAD
           {loading && action === "Sign up"
             ? "Processing..."
             : action === "Login"
@@ -523,15 +550,21 @@ const Login = () => {
               : otpSent
                 ? "Verify OTP & Sign up"
                 : "Send OTP"}
+=======
+          {action === "Login" ? "Sign up" : otpSent ? "Verify OTP & Sign up" : "Send OTP"}
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
         </div>
 
         <div
           className={action === "Sign up" ? "submit gray" : "submit"}
           type="button"
           onClick={() => {
+<<<<<<< HEAD
             if (loading) {
               return;
             }
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
             if (action === "Sign up") {
               setAction("Login");
               setMessage("");
@@ -541,18 +574,29 @@ const Login = () => {
             }
           }}
         >
+<<<<<<< HEAD
           {loading && action === "Login" ? "Logging in..." : "Login"}
         </div>
       </div>
 
       {action === "Sign up" && signupVerificationEnabled && otpSent && (
+=======
+          Login
+        </div>
+      </div>
+
+      {action === "Sign up" && otpSent && (
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
         <div className="submit-container" style={{ marginTop: "10px" }}>
           <div
             className="submit gray"
             onClick={async () => {
+<<<<<<< HEAD
               if (loading) {
                 return;
               }
+=======
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
               if (!firstName || !lastName || !email || !password || !confirmPassword) {
                 setMessage("Please complete signup details before resending OTP");
                 return;
@@ -572,7 +616,11 @@ const Login = () => {
               setMessage(result.message || (result.success ? "OTP resent." : "Failed to resend OTP"));
             }}
           >
+<<<<<<< HEAD
             {loading ? "Sending..." : "Resend OTP"}
+=======
+            Resend OTP
+>>>>>>> 0d7331d11a6e03c0ce33d9cdecd05482a0d68552
           </div>
         </div>
       )}
