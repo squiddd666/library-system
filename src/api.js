@@ -1,5 +1,5 @@
 const API_HOST = `${window.location.protocol}//${window.location.hostname}`;
-const API_URL = `${API_HOST}/library-system-main/server`;
+const API_URL = `${API_HOST}/library-system/server`;
 
 const parseResponse = async (response) => {
   const text = await response.text();
@@ -22,10 +22,9 @@ export const api = {
         },
         body: JSON.stringify({ email, password }),
       });
-      const data = await response.json();
-      return data;
+      return await parseResponse(response);
     } catch (error) {
-      return { success: false, message: 'Connection error. Make sure XAMPP is running.' };
+      return { success: false, message: 'Unable to reach authentication service. Please try again.' };
     }
   },
 
@@ -52,6 +51,36 @@ export const api = {
 
   verifySignupOtp: async (userData, otp) => {
     return api.register({ ...userData, otp, action: 'verify_otp' });
+  },
+
+  requestPasswordResetOtp: async (email) => {
+    try {
+      const response = await fetch(`${API_URL}/reset-password.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'send_otp', email }),
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      return { success: false, message: 'Connection error' };
+    }
+  },
+
+  resetPassword: async (email, otp, newPassword) => {
+    try {
+      const response = await fetch(`${API_URL}/reset-password.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'verify_otp', email, otp, new_password: newPassword }),
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      return { success: false, message: 'Connection error' };
+    }
   },
 
   getSignupSettings: async () => {
@@ -154,6 +183,15 @@ export const api = {
       return data;
     } catch (error) {
       return { success: false, message: 'Connection error' };
+    }
+  },
+
+  getSecurityLogs: async () => {
+    try {
+      const response = await fetch(`${API_URL}/security-logs.php`);
+      return await parseResponse(response);
+    } catch (error) {
+      return { success: false, message: 'Unable to load security logs.' };
     }
   },
 };

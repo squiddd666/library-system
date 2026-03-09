@@ -42,6 +42,36 @@ function writeOtpStore($store)
     file_put_contents(OTP_STORE_FILE, json_encode($store, JSON_PRETTY_PRINT));
 }
 
+function isValidRealName($name)
+{
+    $trimmed = trim((string)$name);
+    if ($trimmed === '') {
+        return false;
+    }
+
+    if (!preg_match("/^[A-Za-z][A-Za-z\\s'\\-]*$/", $trimmed)) {
+        return false;
+    }
+
+    $lettersOnly = preg_replace('/[^A-Za-z]/', '', $trimmed);
+    return strlen($lettersOnly) >= 3;
+}
+
+function isValidBirthdayDate($birthday)
+{
+    if ($birthday === null || $birthday === '') {
+        return true;
+    }
+
+    $date = DateTime::createFromFormat('Y-m-d', $birthday);
+    if (!$date || $date->format('Y-m-d') !== $birthday) {
+        return false;
+    }
+
+    $today = new DateTime('today');
+    return $date <= $today;
+}
+
 // Get POST data
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -53,11 +83,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $data['password'] ?? '';
     $birthday = $data['birthday'] ?? null;
     $gender = $data['gender'] ?? null;
+    $affiliation = trim(strtolower((string)($data['affiliation'] ?? 'student')));
+    $institution_id = trim((string)($data['institution_id'] ?? ''));
     $otp = trim((string)($data['otp'] ?? ''));
 
     // Validation
     if (empty($first_name) || empty($last_name) || empty($email) || empty($password)) {
         echo json_encode(["success" => false, "message" => "All fields are required"]);
+        exit;
+    }
+
+    if (!isValidRealName($first_name)) {
+        echo json_encode(["success" => false, "message" => "First name is not acceptable. Please input a real name (minimum 3 letters, no numbers)."]);
+        exit;
+    }
+
+    if (!isValidRealName($last_name)) {
+        echo json_encode(["success" => false, "message" => "Last name is not acceptable. Please input a real name (minimum 3 letters, no numbers)."]);
+        exit;
+    }
+
+    if (!isValidBirthdayDate($birthday)) {
+        echo json_encode(["success" => false, "message" => "Birthday is not valid. Please select a real date that is not in the future."]);
         exit;
     }
 
@@ -72,6 +119,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check password length
     if (strlen($password) < 8 || strlen($password) > 16) {
         echo json_encode(["success" => false, "message" => "Password must be 8 to 16 characters"]);
+        exit;
+    }
+
+    // Validate affiliation
+    $allowedAffiliations = ['student', 'faculty', 'staff'];
+    if (!in_array($affiliation, $allowedAffiliations, true)) {
+        $affiliation = 'student';
+    }
+
+    // Validate institution id
+    if ($institution_id === '' || !preg_match('/^[A-Za-z0-9-]{6,20}$/', $institution_id)) {
+        echo json_encode(["success" => false, "message" => "Institution ID must be 6 to 20 letters, numbers, or hyphens"]);
         exit;
     }
 
@@ -176,8 +235,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Insert user with default role='student'
     $role = 'student';
-    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password, birthday, gender, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssss", $first_name, $last_name, $email, $hashed_password, $birthday, $gender, $role);
+    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password, birthday, gender, role, affiliation, institution_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssss", $first_name, $last_name, $email, $hashed_password, $birthday, $gender, $role, $affiliation, $institution_id);
 
     if ($stmt->execute()) {
         unset($otpStore[$emailKey]);

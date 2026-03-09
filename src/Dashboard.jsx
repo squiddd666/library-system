@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from './api';
+import { clearAuth, getStoredUser } from './auth';
 import './Dashboard.css';
 
 const emptyForm = {
@@ -13,7 +14,7 @@ const emptyForm = {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = getStoredUser() || {};
 
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,8 @@ const Dashboard = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [activityLog, setActivityLog] = useState([]);
   const [studentActivityLog, setStudentActivityLog] = useState([]);
+  const [securityLogs, setSecurityLogs] = useState([]);
+  const [securityLogsLoading, setSecurityLogsLoading] = useState(true);
   const [signupSettings, setSignupSettings] = useState({
     email_verification_enabled: true
   });
@@ -128,11 +131,23 @@ const Dashboard = () => {
     setSignupSettingsLoading(false);
   }, []);
 
+  const loadSecurityLogs = useCallback(async () => {
+    setSecurityLogsLoading(true);
+    const result = await api.getSecurityLogs();
+    if (result.success) {
+      setSecurityLogs(Array.isArray(result.logs) ? result.logs : []);
+    } else {
+      setMessage(result.message || 'Failed to load security logs.');
+    }
+    setSecurityLogsLoading(false);
+  }, []);
+
   useEffect(() => {
     loadBooks();
     loadStudentActivity();
     loadSignupSettings();
-  }, [loadSignupSettings, loadStudentActivity]);
+    loadSecurityLogs();
+  }, [loadSignupSettings, loadStudentActivity, loadSecurityLogs]);
 
   useEffect(() => {
     const syncStudentActivity = () => loadStudentActivity();
@@ -312,8 +327,8 @@ const Dashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
+    clearAuth();
+    navigate('/login', { replace: true });
   };
 
   const handleSignupVerificationToggle = async () => {
@@ -516,31 +531,60 @@ const Dashboard = () => {
   );
 
   const renderActivity = () => (
-    <div className="content-section">
-      <h3 className="section-title">Recent Admin Actions</h3>
-      <div className="table-container">
-        <table className="activity-table">
-          <thead>
-            <tr>
-              <th>Action</th>
-              <th>Details</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activityLog.length > 0 ? activityLog.map((entry) => (
-              <tr key={entry.id}>
-                <td>{entry.action}</td>
-                <td>{entry.details}</td>
-                <td>{entry.time}</td>
+    <>
+      <div className="content-section">
+        <h3 className="section-title">Recent Admin Actions</h3>
+        <div className="table-container">
+          <table className="activity-table">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Time</th>
               </tr>
-            )) : (
-              <tr><td colSpan="3" className="no-results">No admin actions yet</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {activityLog.length > 0 ? activityLog.map((entry) => (
+                <tr key={entry.id}>
+                  <td>{entry.action}</td>
+                  <td>{entry.details}</td>
+                  <td>{entry.time}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan="3" className="no-results">No admin actions yet</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+      <div className="content-section">
+        <h3 className="section-title">Security Audit Logs</h3>
+        <div className="table-container">
+          <table className="activity-table">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>IP</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {securityLogsLoading ? (
+                <tr><td colSpan="3" className="no-results">Loading security logs...</td></tr>
+              ) : securityLogs.length > 0 ? securityLogs.slice(0, 50).map((entry, idx) => (
+                <tr key={`${entry.time || 'time'}-${entry.event || 'event'}-${idx}`}>
+                  <td>{String(entry.event || '-').replace(/_/g, ' ')}</td>
+                  <td>{entry.ip || '-'}</td>
+                  <td>{entry.time || '-'}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan="3" className="no-results">No security logs found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </>
   );
 
   const renderStudentLogs = () => (
@@ -590,6 +634,34 @@ const Dashboard = () => {
             <p className="setting-description">Reload latest data from server.</p>
           </div>
           <button type="button" className="action-btn" onClick={loadBooks}>Refresh</button>
+        </div>
+        <div className="setting-item">
+          <div className="setting-info">
+            <p className="setting-label">SSO / LDAP</p>
+            <p className="setting-description">Enterprise SSO/LDAP integration is available as an optional deployment upgrade.</p>
+          </div>
+          <button type="button" className="action-btn danger" disabled>Planned</button>
+        </div>
+        <div className="setting-item">
+          <div className="setting-info">
+            <p className="setting-label">Admin 2FA</p>
+            <p className="setting-description">Two-factor authentication can be enabled for admin accounts in the security roadmap.</p>
+          </div>
+          <button type="button" className="action-btn danger" disabled>Planned</button>
+        </div>
+        <div className="setting-item">
+          <div className="setting-info">
+            <p className="setting-label">Session Management</p>
+            <p className="setting-description">Manage active sessions and revoke devices from user security profile (roadmap).</p>
+          </div>
+          <button type="button" className="action-btn danger" disabled>Planned</button>
+        </div>
+        <div className="setting-item">
+          <div className="setting-info">
+            <p className="setting-label">Refresh Security Logs</p>
+            <p className="setting-description">Reload latest authentication security events.</p>
+          </div>
+          <button type="button" className="action-btn" onClick={loadSecurityLogs}>Refresh</button>
         </div>
         <div className="setting-item">
           <div className="setting-info">

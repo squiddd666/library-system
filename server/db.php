@@ -22,4 +22,28 @@ if ($conn->query($sql) === TRUE) {
     // Select the database
     $conn->select_db($database);
 }
+
+function ensureUsersTableColumns($conn)
+{
+    $columns = [];
+    $result = $conn->query("SHOW COLUMNS FROM users");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $columns[$row['Field']] = true;
+        }
+        $result->free();
+    }
+
+    if (!isset($columns['role'])) {
+        $conn->query("ALTER TABLE users ADD COLUMN role ENUM('student', 'admin') DEFAULT 'student'");
+    }
+    if (!isset($columns['affiliation'])) {
+        $conn->query("ALTER TABLE users ADD COLUMN affiliation ENUM('student', 'faculty', 'staff') DEFAULT 'student'");
+    }
+    if (!isset($columns['institution_id'])) {
+        $conn->query("ALTER TABLE users ADD COLUMN institution_id VARCHAR(20) NULL");
+    }
+}
+
+ensureUsersTableColumns($conn);
 ?>

@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     role ENUM('student', 'admin') DEFAULT 'student',
     birthday DATE,
     gender VARCHAR(10),
+    affiliation ENUM('student', 'faculty', 'staff') DEFAULT 'student',
+    institution_id VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email)

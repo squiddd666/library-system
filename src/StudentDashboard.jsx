@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { clearAuth, getStoredUser } from './auth';
 import './StudentDashboard.css';
 
 const StudentDashboard = () => {
@@ -61,8 +62,8 @@ const StudentDashboard = () => {
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?');
     if (confirmed) {
-      localStorage.removeItem('user');
-      navigate('/login');
+      clearAuth();
+      navigate('/login', { replace: true });
     }
   };
 
@@ -90,7 +91,7 @@ const StudentDashboard = () => {
         </div>
         <div className="header-right">
           <div className="user-info">
-            <span className="user-name">{JSON.parse(localStorage.getItem('user') || '{}').first_name}</span>
+            <span className="user-name">{getStoredUser()?.first_name || 'Student'}</span>
           </div>
         </div>
       </header>

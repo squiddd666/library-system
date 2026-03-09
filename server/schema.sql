@@ -12,8 +12,11 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    role ENUM('student', 'admin') DEFAULT 'student',
     birthday DATE,
     gender VARCHAR(10),
+    affiliation ENUM('student', 'faculty', 'staff') DEFAULT 'student',
+    institution_id VARCHAR(20) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
