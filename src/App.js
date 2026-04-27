@@ -13,6 +13,16 @@ import Settings from './pages/student/Settings';
 import { getUserRole, isAuthenticated } from './auth';
 import './index.css';
 
+const StudentOnlyRoute = ({ children }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  if (getUserRole() === 'admin') {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
+  return children;
+};
+
 function App() {
   return (
     <Router>
@@ -32,18 +42,18 @@ function App() {
         <Route path="/dashboard" element={<Navigate to="/admin-dashboard" replace />} />
         <Route 
           path="/student-dashboard" 
-          element={isAuthenticated() ? (getUserRole() !== 'admin' ? <StudentDashboard /> : <Navigate to="/admin-dashboard" replace />) : <Navigate to="/login" replace />}
+          element={getUserRole() === 'admin' ? <Navigate to="/admin-dashboard" replace /> : <StudentDashboard />}
         >
           <Route index element={<StudentHome />} />
           <Route path="books" element={<Books />} />
-          <Route path="borrowed" element={<Borrowed />} />
-          <Route path="returned" element={<Returned />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="borrowed" element={<StudentOnlyRoute><Borrowed /></StudentOnlyRoute>} />
+          <Route path="returned" element={<StudentOnlyRoute><Returned /></StudentOnlyRoute>} />
+          <Route path="profile" element={<StudentOnlyRoute><Profile /></StudentOnlyRoute>} />
+          <Route path="settings" element={<StudentOnlyRoute><Settings /></StudentOnlyRoute>} />
         </Route>
         <Route 
           path="/" 
-          element={<Navigate to="/login" replace />} 
+          element={<Navigate to="/student-dashboard" replace />} 
         />
       </Routes>
     </Router>

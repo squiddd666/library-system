@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { clearAuth, getStoredUser } from './auth';
+import { clearAuth, getStoredUser, isAuthenticated } from './auth';
 import './StudentDashboard.css';
 
 const StudentDashboard = () => {
@@ -8,6 +8,8 @@ const StudentDashboard = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const loggedIn = isAuthenticated();
+  const user = getStoredUser();
 
   const handleSidebarToggle = () => {
     setSidebarOpen((prev) => !prev);
@@ -48,7 +50,6 @@ const StudentDashboard = () => {
     }
   }, [location.pathname, isMobile]);
 
-  // Get page title based on current route
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes('/books')) return 'AVAILABLE BOOKS';
@@ -68,36 +69,38 @@ const StudentDashboard = () => {
   };
 
   const menuItems = [
-    { icon: '📊', label: 'Dashboard', path: '/student-dashboard' },
-    { icon: '📚', label: 'Books', path: '/student-dashboard/books' },
-    { icon: '📖', label: 'Borrowed', path: '/student-dashboard/borrowed' },
-    { icon: '✅', label: 'Returned', path: '/student-dashboard/returned' },
-    { icon: '👤', label: 'Profile', path: '/student-dashboard/profile' },
-    { icon: '⚙️', label: 'Settings', path: '/student-dashboard/settings' }
+    { icon: '\uD83D\uDCCA', label: 'Dashboard', path: '/student-dashboard' },
+    { icon: '\uD83D\uDCDA', label: 'Books', path: '/student-dashboard/books' },
+    ...(loggedIn
+      ? [
+          { icon: '\uD83D\uDCD6', label: 'Borrowed', path: '/student-dashboard/borrowed' },
+          { icon: '\u2705', label: 'Returned', path: '/student-dashboard/returned' },
+          { icon: '\uD83D\uDC64', label: 'Profile', path: '/student-dashboard/profile' },
+          { icon: '\u2699\uFE0F', label: 'Settings', path: '/student-dashboard/settings' }
+        ]
+      : [])
   ];
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
       <header className="dashboard-header">
         <div className="header-left">
-          <button 
+          <button
             className="hamburger-btn"
             onClick={handleSidebarToggle}
           >
-            ☰
+            {'\u2630'}
           </button>
           <h1 className="page-title">{getPageTitle()}</h1>
         </div>
         <div className="header-right">
           <div className="user-info">
-            <span className="user-name">{getStoredUser()?.first_name || 'Student'}</span>
+            <span className="user-name">{loggedIn ? (user?.first_name || 'Student') : 'Guest'}</span>
           </div>
         </div>
       </header>
 
       <div className="dashboard-body">
-        {/* Sidebar */}
         <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <nav className="sidebar-nav">
             {menuItems.map((item, index) => (
@@ -112,15 +115,24 @@ const StudentDashboard = () => {
                 <span className="nav-label">{item.label}</span>
               </NavLink>
             ))}
-            
-            {/* Logout Button */}
-            <div
-              className="nav-item logout-item"
-              onClick={handleLogout}
-            >
-              <span className="nav-icon">🚪</span>
-              <span className="nav-label">Logout</span>
-            </div>
+
+            {loggedIn ? (
+              <div
+                className="nav-item logout-item"
+                onClick={handleLogout}
+              >
+                <span className="nav-icon">{'\uD83D\uDEAA'}</span>
+                <span className="nav-label">Logout</span>
+              </div>
+            ) : (
+              <div
+                className="nav-item logout-item"
+                onClick={() => navigate('/login')}
+              >
+                <span className="nav-icon">{'\uD83D\uDD10'}</span>
+                <span className="nav-label">Login / Create Account</span>
+              </div>
+            )}
           </nav>
         </aside>
         {isMobile && sidebarOpen && (
@@ -132,7 +144,6 @@ const StudentDashboard = () => {
           />
         )}
 
-        {/* Main Content */}
         <main className="main-content">
           <Outlet />
         </main>

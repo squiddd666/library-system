@@ -1,18 +1,105 @@
+import { isAuthenticated } from '../../auth';
+
 const STORAGE_PREFIX = 'library.student';
 
 const DEFAULT_BOOKS = [
   // eslint-disable-next-line no-script-url
-  { id: 1, title: 'JavaScript: The Good Parts', author: 'Douglas Crockford', category: 'Programming', available: 5 },
-  { id: 2, title: 'Clean Code', author: 'Robert C. Martin', category: 'Programming', available: 3 },
-  { id: 3, title: 'Design Patterns', author: 'Gang of Four', category: 'Programming', available: 2 },
-  { id: 4, title: 'Introduction to Algorithms', author: 'Thomas Cormen', category: 'Computer Science', available: 4 },
-  { id: 5, title: 'The Pragmatic Programmer', author: 'David Thomas', category: 'Programming', available: 6 },
-  { id: 6, title: 'Computer Networking', author: 'James Kurose', category: 'Computer Science', available: 3 },
-  { id: 7, title: 'Database System Concepts', author: 'Silberschatz', category: 'Database', available: 4 },
-  { id: 8, title: 'Operating System Concepts', author: 'Abraham Silberschatz', category: 'Computer Science', available: 2 },
-  { id: 9, title: 'Artificial Intelligence', author: 'Stuart Russell', category: 'AI', available: 5 },
-  { id: 10, title: 'Machine Learning', author: 'Tom Mitchell', category: 'AI', available: 3 }
+  {
+    id: 1,
+    title: 'JavaScript: The Good Parts',
+    author: 'Douglas Crockford',
+    category: 'Programming',
+    available: 5,
+    cover: '/book-covers/javascript-good-parts.svg',
+    intro: 'A compact guide to the strongest features and best practices of JavaScript.'
+  },
+  {
+    id: 2,
+    title: 'Clean Code',
+    author: 'Robert C. Martin',
+    category: 'Programming',
+    available: 3,
+    cover: '/book-covers/clean-code.svg',
+    intro: 'Learn practical habits for writing readable, maintainable, and professional code.'
+  },
+  {
+    id: 3,
+    title: 'Design Patterns',
+    author: 'Gang of Four',
+    category: 'Programming',
+    available: 2,
+    cover: '/book-covers/design-patterns.svg',
+    intro: 'Classic software design solutions for common object-oriented development problems.'
+  },
+  {
+    id: 4,
+    title: 'Introduction to Algorithms',
+    author: 'Thomas Cormen',
+    category: 'Computer Science',
+    available: 4,
+    cover: '/book-covers/intro-to-algorithms.svg',
+    intro: 'A foundational algorithms textbook covering theory, data structures, and analysis.'
+  },
+  {
+    id: 5,
+    title: 'The Pragmatic Programmer',
+    author: 'David Thomas',
+    category: 'Programming',
+    available: 6,
+    cover: '/book-covers/pragmatic-programmer.svg',
+    intro: 'Timeless advice to improve developer mindset, craft, and day-to-day coding workflow.'
+  },
+  {
+    id: 6,
+    title: 'Computer Networking',
+    author: 'James Kurose',
+    category: 'Computer Science',
+    available: 3,
+    cover: '/book-covers/computer-networking.svg',
+    intro: 'Clear explanation of networking concepts from application layer to network core.'
+  },
+  {
+    id: 7,
+    title: 'Database System Concepts',
+    author: 'Silberschatz',
+    category: 'Database',
+    available: 4,
+    cover: '/book-covers/database-system-concepts.svg',
+    intro: 'Comprehensive overview of database design, SQL, transactions, and storage systems.'
+  },
+  {
+    id: 8,
+    title: 'Operating System Concepts',
+    author: 'Abraham Silberschatz',
+    category: 'Computer Science',
+    available: 2,
+    cover: '/book-covers/operating-system-concepts.svg',
+    intro: 'Core operating system topics including processes, memory management, and scheduling.'
+  },
+  {
+    id: 9,
+    title: 'Artificial Intelligence',
+    author: 'Stuart Russell',
+    category: 'AI',
+    available: 5,
+    cover: '/book-covers/artificial-intelligence.svg',
+    intro: 'A broad introduction to intelligent agents, reasoning, search, and learning systems.'
+  },
+  {
+    id: 10,
+    title: 'Machine Learning',
+    author: 'Tom Mitchell',
+    category: 'AI',
+    available: 3,
+    cover: '/book-covers/machine-learning.svg',
+    intro: 'Introduces key machine learning ideas, models, and evaluation techniques.'
+  }
 ];
+
+const DEFAULT_BOOKS_BY_ID = DEFAULT_BOOKS.reduce((acc, book) => {
+  acc[book.id] = book;
+  return acc;
+}, {});
 
 const DEFAULT_NOTIFICATIONS = {
   email: true,
@@ -63,7 +150,13 @@ export const getBooksData = () => {
     writeJSON(key, DEFAULT_BOOKS);
     return DEFAULT_BOOKS;
   }
-  return books;
+  const normalized = books.map((book) => {
+    const defaults = DEFAULT_BOOKS_BY_ID[book.id];
+    if (!defaults) return book;
+    return { ...defaults, ...book };
+  });
+  writeJSON(key, normalized);
+  return normalized;
 };
 
 export const getBorrowedData = () => {
@@ -101,6 +194,13 @@ export const getActivityData = () => {
 };
 
 export const borrowBookById = (bookId) => {
+  if (!isAuthenticated()) {
+    return {
+      success: false,
+      message: 'Please login or create an account to borrow books.'
+    };
+  }
+
   const books = getBooksData();
   const borrowed = getBorrowedData();
 
