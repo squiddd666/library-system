@@ -9,6 +9,7 @@ const emptyForm = {
   author: '',
   isbn: '',
   category: '',
+  intro: '',
   quantity: 1,
   generateQr: true
 };
@@ -25,7 +26,8 @@ const Dashboard = () => {
   const [stockFilter, setStockFilter] = useState('all');
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
-  const [qrFile, setQrFile] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [formVisible, setFormVisible] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -185,6 +187,16 @@ const Dashboard = () => {
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
   }, [activeSection, isMobile]);
+  useEffect(() => {
+    if (!formVisible) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [formVisible]);
 
   const summary = useMemo(() => {
     const totalTitles = books.length;
@@ -232,7 +244,8 @@ const Dashboard = () => {
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
-    setQrFile(null);
+    setCoverFile(null);
+    setFormVisible(false);
   };
 
   const handleSubmit = async (event) => {
@@ -249,6 +262,7 @@ const Dashboard = () => {
       author: form.author.trim(),
       isbn: form.isbn.trim(),
       category: form.category.trim(),
+      intro: form.intro.trim(),
       quantity: Number(form.quantity || 1)
     };
     delete payload.generateQr;
@@ -261,11 +275,11 @@ const Dashboard = () => {
     if (result.success) {
       const targetBookId = editingId || Number(result.id || 0);
       if (targetBookId > 0) {
-        if (qrFile) {
-          const uploadResult = await api.uploadBookQr(targetBookId, qrFile);
+        if (coverFile) {
+          const uploadResult = await api.uploadBookCover(targetBookId, coverFile);
           combinedMessage = uploadResult.success
-            ? `${combinedMessage} QR uploaded.`
-            : `${combinedMessage} QR upload failed: ${uploadResult.message || 'Unknown error'}`;
+            ? `${combinedMessage} Cover uploaded.`
+            : `${combinedMessage} Cover upload failed: ${uploadResult.message || 'Unknown error'}`;
         } else if (form.generateQr) {
           const generateResult = await api.generateBookQr(targetBookId);
           combinedMessage = generateResult.success
@@ -284,15 +298,17 @@ const Dashboard = () => {
 
   const handleEdit = (book) => {
     setEditingId(Number(book.id));
+    setFormVisible(true);
     setForm({
       title: String(book.title || ''),
       author: String(book.author || ''),
       isbn: String(book.isbn || ''),
       category: String(book.category || ''),
+      intro: String(book.intro || ''),
       quantity: Number(book.quantity || 1),
       generateQr: false
     });
-    setQrFile(null);
+    setCoverFile(null);
     setActiveSection('books');
   };
 
@@ -462,48 +478,23 @@ const Dashboard = () => {
           <option value="out">Out of Stock</option>
         </select>
         <button type="button" className="action-btn" onClick={handleExportCsv}>Export CSV</button>
+        {!formVisible && (
+          <button
+            type="button"
+            className="action-btn"
+            onClick={() => {
+              setEditingId(null);
+              setForm(emptyForm);
+              setCoverFile(null);
+              setFormVisible(true);
+            }}
+          >
+            Add New Book
+          </button>
+        )}
       </div>
 
-      <div className="admin-grid">
-        <div className="content-section">
-          <h3 className="section-title">{editingId ? 'Edit Book' : 'Add Book'}</h3>
-          <form className="book-form" onSubmit={handleSubmit}>
-            <input type="text" placeholder="Title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
-            <input type="text" placeholder="Author" value={form.author} onChange={(e) => setForm((prev) => ({ ...prev, author: e.target.value }))} />
-            <input type="text" placeholder="ISBN" value={form.isbn} onChange={(e) => setForm((prev) => ({ ...prev, isbn: e.target.value }))} />
-            <input type="text" placeholder="Category" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
-            <input type="number" min="1" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))} />
-            <input
-              type="file"
-              accept=".png,.jpg,.jpeg,.webp,.svg"
-              onChange={(e) => {
-                const nextFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-                setQrFile(nextFile);
-              }}
-            />
-            <label style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'white', fontSize: '13px' }}>
-              <input
-                type="checkbox"
-                checked={Boolean(form.generateQr)}
-                onChange={(e) => setForm((prev) => ({ ...prev, generateQr: e.target.checked }))}
-                disabled={Boolean(qrFile)}
-              />
-              Generate QR automatically if no QR image is uploaded
-            </label>
-            {editingId && (
-              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>
-                Leave file empty to keep existing QR. Enable auto-generate to replace it.
-              </p>
-            )}
-            <div className="form-actions">
-              <button type="submit" className="action-btn" disabled={saving}>
-                {saving ? 'Saving...' : editingId ? 'Update Book' : 'Add Book'}
-              </button>
-              {editingId && <button type="button" className="action-btn danger" onClick={resetForm}>Cancel</button>}
-            </div>
-          </form>
-        </div>
-
+      <div className="admin-grid single-column">
         <div className="content-section">
           <h3 className="section-title">Books Inventory</h3>
           <div className="table-container">
@@ -515,13 +506,14 @@ const Dashboard = () => {
                   <th>Category</th>
                   <th>Qty</th>
                   <th>Avail</th>
+                  <th>Cover</th>
                   <th>QR</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan="7" className="no-results">Loading...</td></tr>
+                  <tr><td colSpan="8" className="no-results">Loading...</td></tr>
                 ) : filteredBooks.length > 0 ? (
                   filteredBooks.map((book) => (
                     <tr key={book.id}>
@@ -530,6 +522,15 @@ const Dashboard = () => {
                       <td>{book.category || '-'}</td>
                       <td>{book.quantity}</td>
                       <td>{book.available}</td>
+                      <td>
+                        {book.cover_image_url ? (
+                          <img
+                            src={book.cover_image_url}
+                            alt={`${book.title} cover`}
+                            style={{ width: '44px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)' }}
+                          />
+                        ) : '-'}
+                      </td>
                       <td>
                         {book.qr_image_url ? (
                           <img
@@ -547,13 +548,70 @@ const Dashboard = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="7" className="no-results">No books found</td></tr>
+                  <tr><td colSpan="8" className="no-results">No books found</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
+      {formVisible && (
+        <div className="book-form-modal-backdrop" onClick={resetForm} role="presentation">
+          <div className="content-section book-form-modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="section-title">{editingId ? 'Edit Book' : 'Add Book'}</h3>
+            <form className="book-form" onSubmit={handleSubmit}>
+              <input type="text" placeholder="Title" value={form.title} onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))} />
+              <input type="text" placeholder="Author" value={form.author} onChange={(e) => setForm((prev) => ({ ...prev, author: e.target.value }))} />
+              <input type="text" placeholder="ISBN" value={form.isbn} onChange={(e) => setForm((prev) => ({ ...prev, isbn: e.target.value }))} />
+              <input type="text" placeholder="Category" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} />
+              <textarea
+                placeholder="Book summary / intro"
+                value={form.intro}
+                onChange={(e) => setForm((prev) => ({ ...prev, intro: e.target.value }))}
+                rows={4}
+              />
+              <input type="number" min="1" placeholder="Quantity" value={form.quantity} onChange={(e) => setForm((prev) => ({ ...prev, quantity: e.target.value }))} />
+              <div className="file-picker">
+                <label htmlFor="book-qr-upload" className="file-picker-btn">Choose book image file</label>
+                <input
+                  id="book-qr-upload"
+                  type="file"
+                  accept=".png,.jpg,.jpeg,.webp,.svg"
+                  onChange={(e) => {
+                    const nextFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                    setCoverFile(nextFile);
+                  }}
+                />
+                <span className="file-picker-note">
+                  {coverFile
+                    ? `${coverFile.name} selected`
+                    : 'No file chosen'}
+                </span>
+              </div>
+              <label style={{ display: 'flex', gap: '8px', alignItems: 'center', color: 'white', fontSize: '13px' }}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.generateQr)}
+                  onChange={(e) => setForm((prev) => ({ ...prev, generateQr: e.target.checked }))}
+                  disabled={false}
+                />
+                Generate QR automatically if no image is uploaded
+              </label>
+              {editingId && (
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>
+                  Leave file empty to keep existing cover image.
+                </p>
+              )}
+              <div className="form-actions">
+                <button type="submit" className="action-btn" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Update Book' : 'Add Book'}
+                </button>
+                <button type="button" className="action-btn danger" onClick={resetForm}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 
@@ -795,3 +853,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

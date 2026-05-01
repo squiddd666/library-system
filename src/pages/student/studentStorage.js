@@ -168,7 +168,8 @@ export const setBooksData = (books) => {
     quantity: Number(book.quantity ?? book.copies_total ?? 0),
     title: String(book.title || ''),
     author: String(book.author || ''),
-    category: String(book.category || '')
+    category: String(book.category || ''),
+    cover: String(book.cover_image_url || book.cover || '')
   }));
   writeJSON(keyFor('books'), normalized);
 };

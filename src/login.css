@@ -3,10 +3,56 @@
   width: 100%;
   min-height: 100vh;
   display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+
+.login-layout {
+  width: min(1400px, 100%);
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+}
+
+.login-visual-pane {
+  display: flex;
+  align-items: flex-end;
+  padding: 48px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.login-visual-content {
+  max-width: 520px;
+}
+
+.login-visual-eyebrow {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.78);
+  margin-bottom: 16px;
+}
+
+.login-visual-content h1 {
+  font-size: clamp(40px, 4.8vw, 78px);
+  line-height: 0.98;
+  color: #ffffff;
+  margin: 0 0 14px;
+}
+
+.login-visual-content p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 16px;
+}
+
+.login-form-pane {
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  position: relative;
+  padding: 24px;
 }
 
 .login-menu-btn {
@@ -100,7 +146,7 @@
   padding: 40px 30px;
   box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
   animation: slideUp 0.6s ease-out;
-  margin: auto;
+  margin: 0;
 }
 
 .login-pro {
@@ -363,7 +409,7 @@
 /* Responsive adjustments */
 @media (max-width: 520px) {
   .login-shell {
-    padding: 16px;
+    padding: 0;
   }
 
   .login-sidebar {
@@ -391,6 +437,21 @@
   .submit {
     width: 100%;
     max-width: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .login-visual-pane {
+    display: none;
+  }
+
+  .login-form-pane {
+    min-height: 100vh;
+    padding: 16px;
   }
 }
 

@@ -57,6 +57,7 @@ const StudentHome = () => {
 
   const resolveCoverPath = (cover) => {
     if (!cover) return '/book-covers/javascript-good-parts.svg';
+    if (cover.startsWith('http://') || cover.startsWith('https://')) return cover;
     if (cover.startsWith('/')) return cover;
     return `/book-covers/${cover}`;
   };

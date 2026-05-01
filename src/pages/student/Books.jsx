@@ -49,6 +49,8 @@ const Books = () => {
   const [borrowedBookIds, setBorrowedBookIds] = useState([]);
   const [favoriteBookIds, setFavoriteBookIds] = useState([]);
   const [selectedBookId, setSelectedBookId] = useState(null);
+  const [speaking, setSpeaking] = useState(false);
+  const [previewSpeaking, setPreviewSpeaking] = useState(false);
 
   useEffect(() => {
     const loadBooks = async () => {
@@ -108,6 +110,10 @@ const Books = () => {
   };
 
   const closePreview = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setPreviewSpeaking(false);
     setSelectedBookId(null);
   };
 
@@ -141,6 +147,62 @@ const Books = () => {
     setMessage('Notification request saved. We will notify you once this book is available.');
   };
 
+  const handleSpeakSection = () => {
+    if (!('speechSynthesis' in window)) {
+      setMessage('Text-to-speech is not supported in this browser.');
+      return;
+    }
+
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+
+    const text = `Available Books. Browse our library collection. ${
+      searchQuery ? `Current search is ${searchQuery}.` : 'No active search filter.'
+    } Showing ${filteredBooks.length} result${filteredBooks.length === 1 ? '' : 's'}.`;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  };
+
+  const handleSpeakBookPreview = () => {
+    if (!selectedBook) return;
+    if (!('speechSynthesis' in window)) {
+      setMessage('Text-to-speech is not supported in this browser.');
+      return;
+    }
+
+    if (previewSpeaking) {
+      window.speechSynthesis.cancel();
+      setPreviewSpeaking(false);
+      return;
+    }
+
+    const text = `${selectedBook.title}. Author: ${selectedBook.author}. Category: ${selectedBook.category}. ${
+      selectedBook.intro || 'No summary available for this title yet.'
+    } ${selectedBook.available > 0 ? `${selectedBook.available} copies available.` : 'Currently not available.'}`;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.onend = () => setPreviewSpeaking(false);
+    utterance.onerror = () => setPreviewSpeaking(false);
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setPreviewSpeaking(true);
+  };
+
+
   return (
     <div className="books-page">
       <div className="page-header">
@@ -157,6 +219,12 @@ const Books = () => {
           className="search-input"
         />
         <span className="search-icon">Search</span>
+      </div>
+      <div className="tts-toolbar">
+        <span className="tts-label">Text to Speech</span>
+        <button type="button" className="action-btn small-btn" onClick={handleSpeakSection}>
+          {speaking ? 'Stop Reading' : 'Read This Section'}
+        </button>
       </div>
 
       {message && (
@@ -246,6 +314,12 @@ const Books = () => {
                     </div>
                   )}
                   <p className="preview-intro">{selectedBook.intro || 'No summary available for this title yet.'}</p>
+                <div className="preview-tts">
+                  <span>Text to Speech</span>
+                  <button type="button" className="action-btn small-btn" onClick={handleSpeakBookPreview}>
+                    {previewSpeaking ? 'Stop Reading Book' : 'Read Book Details'}
+                  </button>
+                </div>
                 <div className="preview-badges">
                   <span className={`availability-badge ${selectedBook.available > 0 ? 'available' : 'unavailable'}`}>
                     {selectedBook.available > 0 ? `${selectedBook.available} copies available` : 'Not available'}
@@ -324,6 +398,17 @@ const Books = () => {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 20px;
+        }
+        .tts-toolbar {
+          margin: -10px 0 22px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .tts-label {
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 13px;
+          font-weight: 600;
         }
         .book-card {
           background: rgba(255, 255, 255, 0.05);
@@ -456,6 +541,17 @@ const Books = () => {
           margin-bottom: 12px;
           color: rgba(255, 255, 255, 0.86);
           line-height: 1.6;
+        }
+        .preview-tts {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 12px;
+        }
+        .preview-tts span {
+          color: rgba(255, 255, 255, 0.82);
+          font-size: 13px;
+          font-weight: 600;
         }
         .preview-badges {
           display: flex;

@@ -19,6 +19,28 @@ function ensureQrColumn($conn) {
     return $conn->query("ALTER TABLE books ADD COLUMN qr_image_url VARCHAR(500) NULL AFTER available") === true;
 }
 
+function ensureCoverColumn($conn) {
+    $check = $conn->query("SHOW COLUMNS FROM books LIKE 'cover_image_url'");
+    if (!$check) {
+        return false;
+    }
+    if ($check->num_rows > 0) {
+        return true;
+    }
+    return $conn->query("ALTER TABLE books ADD COLUMN cover_image_url VARCHAR(500) NULL AFTER qr_image_url") === true;
+}
+
+function ensureIntroColumn($conn) {
+    $check = $conn->query("SHOW COLUMNS FROM books LIKE 'intro'");
+    if (!$check) {
+        return false;
+    }
+    if ($check->num_rows > 0) {
+        return true;
+    }
+    return $conn->query("ALTER TABLE books ADD COLUMN intro TEXT NULL AFTER cover_image_url") === true;
+}
+
 if ($method === 'OPTIONS') {
     http_response_code(200);
     echo json_encode(["success" => true]);
@@ -28,6 +50,10 @@ if ($method === 'OPTIONS') {
 
 switch ($method) {
     case 'GET':
+        if (!ensureQrColumn($conn) || !ensureCoverColumn($conn) || !ensureIntroColumn($conn)) {
+            echo json_encode(["success" => false, "message" => "Failed to prepare books table columns"]);
+            break;
+        }
         // Get all books
         $result = $conn->query("SELECT * FROM books ORDER BY title");
         if (!$result) {
@@ -44,8 +70,8 @@ switch ($method) {
         break;
 
     case 'POST':
-        if (!ensureQrColumn($conn)) {
-            echo json_encode(["success" => false, "message" => "Failed to prepare QR column in books table"]);
+        if (!ensureQrColumn($conn) || !ensureCoverColumn($conn) || !ensureIntroColumn($conn)) {
+            echo json_encode(["success" => false, "message" => "Failed to prepare books table columns"]);
             break;
         }
         // Add new book
@@ -57,18 +83,20 @@ switch ($method) {
         $category = trim($data['category'] ?? '');
         $quantity = intval($data['quantity'] ?? 1);
         $qrImageUrl = trim($data['qr_image_url'] ?? '');
+        $coverImageUrl = trim($data['cover_image_url'] ?? '');
+        $intro = trim($data['intro'] ?? '');
         
         if (empty($title) || empty($author)) {
             echo json_encode(["success" => false, "message" => "Title and author are required"]);
             break;
         }
         
-        $stmt = $conn->prepare("INSERT INTO books (title, author, isbn, category, quantity, available, qr_image_url) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO books (title, author, isbn, category, quantity, available, qr_image_url, cover_image_url, intro) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             echo json_encode(["success" => false, "message" => "Prepare failed: " . $conn->error]);
             break;
         }
-        $stmt->bind_param("ssssiis", $title, $author, $isbn, $category, $quantity, $quantity, $qrImageUrl);
+        $stmt->bind_param("ssssiisss", $title, $author, $isbn, $category, $quantity, $quantity, $qrImageUrl, $coverImageUrl, $intro);
         
         if ($stmt->execute()) {
             echo json_encode([
@@ -84,8 +112,8 @@ switch ($method) {
         break;
 
     case 'PUT':
-        if (!ensureQrColumn($conn)) {
-            echo json_encode(["success" => false, "message" => "Failed to prepare QR column in books table"]);
+        if (!ensureQrColumn($conn) || !ensureCoverColumn($conn) || !ensureIntroColumn($conn)) {
+            echo json_encode(["success" => false, "message" => "Failed to prepare books table columns"]);
             break;
         }
         // Update book
@@ -99,20 +127,31 @@ switch ($method) {
         $quantity = intval($data['quantity'] ?? 1);
         $qrImageUrlProvided = array_key_exists('qr_image_url', $data);
         $qrImageUrl = trim($data['qr_image_url'] ?? '');
-        
-        if ($qrImageUrlProvided) {
-            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ?, qr_image_url = ? WHERE id = ?");
+        $coverImageUrlProvided = array_key_exists('cover_image_url', $data);
+        $coverImageUrl = trim($data['cover_image_url'] ?? '');
+        $intro = trim($data['intro'] ?? '');
+
+        if ($qrImageUrlProvided && $coverImageUrlProvided) {
+            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ?, qr_image_url = ?, cover_image_url = ?, intro = ? WHERE id = ?");
+        } else if ($qrImageUrlProvided) {
+            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ?, qr_image_url = ?, intro = ? WHERE id = ?");
+        } else if ($coverImageUrlProvided) {
+            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ?, cover_image_url = ?, intro = ? WHERE id = ?");
         } else {
-            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, quantity = ?, available = ?, intro = ? WHERE id = ?");
         }
         if (!$stmt) {
             echo json_encode(["success" => false, "message" => "Prepare failed: " . $conn->error]);
             break;
         }
-        if ($qrImageUrlProvided) {
-            $stmt->bind_param("ssssiisi", $title, $author, $isbn, $category, $quantity, $quantity, $qrImageUrl, $id);
+        if ($qrImageUrlProvided && $coverImageUrlProvided) {
+            $stmt->bind_param("ssssiisssi", $title, $author, $isbn, $category, $quantity, $quantity, $qrImageUrl, $coverImageUrl, $intro, $id);
+        } else if ($qrImageUrlProvided) {
+            $stmt->bind_param("ssssiissi", $title, $author, $isbn, $category, $quantity, $quantity, $qrImageUrl, $intro, $id);
+        } else if ($coverImageUrlProvided) {
+            $stmt->bind_param("ssssiissi", $title, $author, $isbn, $category, $quantity, $quantity, $coverImageUrl, $intro, $id);
         } else {
-            $stmt->bind_param("ssssiii", $title, $author, $isbn, $category, $quantity, $quantity, $id);
+            $stmt->bind_param("ssssiisi", $title, $author, $isbn, $category, $quantity, $quantity, $intro, $id);
         }
         
         if ($stmt->execute()) {

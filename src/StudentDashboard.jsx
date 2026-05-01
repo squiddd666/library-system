@@ -68,6 +68,11 @@ const StudentDashboard = () => {
     }
   };
 
+  const handleGuestLogin = () => {
+    clearAuth();
+    navigate('/login', { replace: true });
+  };
+
   const menuItems = [
     { icon: '\uD83D\uDCCA', label: 'Dashboard', path: '/student-dashboard' },
     { icon: '\uD83D\uDCDA', label: 'Books', path: '/student-dashboard/books' },
@@ -94,9 +99,19 @@ const StudentDashboard = () => {
           <h1 className="page-title">{getPageTitle()}</h1>
         </div>
         <div className="header-right">
-          <div className="user-info">
-            <span className="user-name">{loggedIn ? (user?.first_name || 'Student') : 'Guest'}</span>
-          </div>
+          {loggedIn ? (
+            <div className="user-info">
+              <span className="user-name">{user?.first_name || 'Student'}</span>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="action-btn header-login-btn"
+              onClick={handleGuestLogin}
+            >
+              Login
+            </button>
+          )}
         </div>
       </header>
 
@@ -116,21 +131,13 @@ const StudentDashboard = () => {
               </NavLink>
             ))}
 
-            {loggedIn ? (
+            {loggedIn && (
               <div
                 className="nav-item logout-item"
                 onClick={handleLogout}
               >
                 <span className="nav-icon">{'\uD83D\uDEAA'}</span>
                 <span className="nav-label">Logout</span>
-              </div>
-            ) : (
-              <div
-                className="nav-item logout-item"
-                onClick={() => navigate('/login')}
-              >
-                <span className="nav-icon">{'\uD83D\uDD10'}</span>
-                <span className="nav-label">Login / Create Account</span>
               </div>
             )}
           </nav>

@@ -169,6 +169,22 @@ export const api = {
     }
   },
 
+  uploadBookCover: async (bookId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append('book_id', String(bookId));
+      formData.append('cover_image', file);
+
+      const response = await fetch(`${API_URL}/book-cover.php`, {
+        method: 'POST',
+        body: formData,
+      });
+      return await parseResponse(response);
+    } catch (error) {
+      return { success: false, message: 'Connection error while uploading book cover.' };
+    }
+  },
+
   generateBookQr: async (bookId) => {
     try {
       const formData = new FormData();

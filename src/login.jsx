@@ -400,8 +400,18 @@ const Login = () => {
         <button type="button" aria-label="Close menu" className="login-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
+      <div className="login-layout">
+      <section className="login-visual-pane" aria-hidden="true">
+        <div className="login-visual-content">
+          <div className="login-visual-eyebrow">Library</div>
+          <h1>Explore the books you need.</h1>
+          <p>Borrow, track, and manage your library activity in one portal.</p>
+        </div>
+      </section>
+
+      <section className="login-form-pane">
       <div className="container login-pro">
-      <div className="login-brand">CvSU Library Portal</div>
+      <div className="login-brand">Library Portal</div>
       <div className="header">
         <div className="text">{action}</div>
         <div className="underline"></div>
@@ -688,6 +698,8 @@ const Login = () => {
         <span>|</span>
         <a href="mailto:support@library-system.local">Help</a>
       </div>
+    </div>
+    </section>
     </div>
     </div>
   );
